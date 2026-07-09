@@ -6,8 +6,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ClerkProvider, SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { dark } from '@clerk/themes';
 
+import ConvexProviderWithClerk from "@/components/ConvexProviderWithClerk";
+
 
 import "./globals.css";
+
 
 const inter = Inter({
   variable: "--font-inter-sans",
@@ -51,7 +54,9 @@ export default function RootLayout({
             </SignedIn>
           </header>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
+            <ConvexProviderWithClerk>
+              {children}
+            </ConvexProviderWithClerk>
           </ThemeProvider>
 
         </body>
