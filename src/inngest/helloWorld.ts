@@ -1,11 +1,45 @@
+import { firecrawl } from "@/lib/firecrawl";
 import { inngest } from "./client";
+import { generateText, streamText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 
-export default inngest.createFunction(
-  {id : "hello-world"},
-  {event: "demo/event.sent"},
-  async ({ event, step, runId }) => {
-    return {
-      message: `Hello ${event.name}!`,
-    };
-  }
+const URL_REGEX = /https?:\/\/[^\s]+/g;
+
+const demoGenerate = inngest.createFunction(
+  { id: "demo-generate" },
+  { event: "demo/generate" },
+  async ({ event, step }) => {
+    const { prompt } = event.data as { prompt: string; };
+
+    const urls = await step.run("extract-urls", async () => {
+      return prompt.match(URL_REGEX) ?? [];
+    }) as string[];
+
+    const scrapedContent = await step.run("scrape-urls", async () => {
+      const results = await Promise.all(
+        urls.map(async (url) => {
+          const result = await firecrawl.scrape(
+            url,
+            { formats: ["markdown"] },
+          );
+          return result.markdown ?? null;
+        })
+      );
+      return results.filter(Boolean).join("\n\n");
+    });
+
+    const finalPrompt = scrapedContent
+      ? `Context:\n${scrapedContent}\n\nQuestion: ${prompt}`
+      : prompt;
+
+    await step.run("generate-text", async () => {
+      return await generateText({
+        model: anthropic('claude-haiku-4-5-20251001'),
+        prompt: finalPrompt,
+      });
+    })
+  },
 );
+
+
+export default demoGenerate;
