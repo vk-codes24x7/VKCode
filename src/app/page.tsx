@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-import { Authenticated, Unauthenticated} from 'convex/react';
+import { Authenticated, Unauthenticated } from 'convex/react';
 import Chat from '@/components/Chat';
 
 const Home = () => {
@@ -14,6 +14,14 @@ const Home = () => {
       </Authenticated>
       <Unauthenticated>
         <p>Please sign in to create projects.</p>
+        <button
+          type="button"
+          onClick={() => {
+            throw new Error("Sentry Test Error");
+          }}
+        >
+          Break the world
+        </button>;
       </Unauthenticated>
     </div>
   )
